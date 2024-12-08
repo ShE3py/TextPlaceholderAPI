@@ -6,6 +6,7 @@ import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.scoreboard.ScoreboardPlayerScore;
 import net.minecraft.scoreboard.ServerScoreboard;
+import net.minecraft.stat.Stat;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
@@ -17,6 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Objects;
+import java.util.function.IntFunction;
 
 public class ServerPlaceholders {
     public static void register() {
@@ -154,7 +156,13 @@ public class ServerPlaceholders {
                     int position = Integer.parseInt(args[1]);
                     Collection<ScoreboardPlayerScore> scoreboardEntries = scoreboard.getAllPlayerScores(scoreboardObjective);
                     ScoreboardPlayerScore scoreboardEntry = scoreboardEntries.toArray(ScoreboardPlayerScore[]::new)[scoreboardEntries.size() - position];
-                    return PlaceholderResult.value(String.valueOf(scoreboardEntry.getScore()));
+                    
+                    IntFunction<String> formatter = Integer::toString;
+                    if(scoreboardObjective.getCriterion() instanceof Stat<?> stat) {
+                        formatter = stat::format;
+                    }
+                    
+                    return PlaceholderResult.value(formatter.apply(scoreboardEntry.getScore()));
                 } catch (Exception e) {
                     /* Into the void you go! */
                     return PlaceholderResult.invalid("Invalid position!");
